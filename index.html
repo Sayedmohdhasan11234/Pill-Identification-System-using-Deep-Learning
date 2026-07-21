@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tambal — Medicine Identifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF6;
+    --ink:#16241F;
+    --ink-soft:#4A5C54;
+    --panel:#EEF4F0;
+    --line:#D6DED9;
+    --teal:#0E7C63;
+    --teal-deep:#0A5F4C;
+    --amber:#E2A33B;
+    --white:#FFFFFF;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding:56px 24px 100px;
+  }
+
+  /* ---------- Header / Rx bar ---------- */
+  .rx-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:18px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:64px;
+  }
+  .rx-mark{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:-0.02em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .rx-mark .cross{
+    width:18px; height:18px;
+    position:relative;
+    flex-shrink:0;
+  }
+  .rx-mark .cross::before, .rx-mark .cross::after{
+    content:'';
+    position:absolute;
+    background:var(--teal);
+  }
+  .rx-mark .cross::before{ width:100%; height:32%; top:34%; left:0; border-radius:2px;}
+  .rx-mark .cross::after{ height:100%; width:32%; left:34%; top:0; border-radius:2px;}
+  .rx-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    padding:5px 10px;
+    border-radius:20px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:48px;
+    align-items:center;
+    margin-bottom:72px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:44px;
+    line-height:1.08;
+    letter-spacing:-0.02em;
+    margin-bottom:18px;
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--teal);
+  }
+  .hero p{
+    color:var(--ink-soft);
+    font-size:16px;
+    line-height:1.6;
+    max-width:44ch;
+  }
+
+  .capsule-art{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+  .capsule-art svg{ width:100%; max-width:220px; height:auto; }
+
+  /* ---------- Upload tray ---------- */
+  .tray{
+    background:var(--panel);
+    border:1.5px dashed #A9C2B7;
+    border-radius:18px;
+    padding:40px;
+    text-align:center;
+    position:relative;
+    transition:border-color .2s ease, background .2s ease;
+    cursor:pointer;
+  }
+  .tray.drag{
+    border-color:var(--teal);
+    background:#E4F1EB;
+  }
+  .tray-icon{
+    width:46px; height:46px;
+    margin:0 auto 18px;
+    border-radius:50%;
+    background:var(--white);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tray-icon svg{ width:22px; height:22px; }
+  .tray h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:17px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .tray p{
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+  .tray input{ display:none; }
+
+  .preview-wrap{
+    display:none;
+    margin-top:20px;
+    text-align:left;
+  }
+  .preview-wrap.show{ display:block; }
+  .preview-frame{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+  }
+  .preview-frame img{
+    width:56px; height:56px;
+    object-fit:cover;
+    border-radius:8px;
+    flex-shrink:0;
+  }
+  .preview-info{ flex:1; min-width:0; }
+  .preview-name{
+    font-size:13px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .preview-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .clear-btn{
+    background:none; border:none;
+    color:var(--ink-soft);
+    font-size:18px;
+    cursor:pointer;
+    line-height:1;
+    padding:4px 8px;
+  }
+  .clear-btn:hover{ color:var(--ink); }
+
+  .go-btn{
+    margin-top:16px;
+    width:100%;
+    background:var(--ink);
+    color:var(--white);
+    border:none;
+    border-radius:10px;
+    padding:14px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:background .2s ease, transform .1s ease;
+  }
+  .go-btn.show{ display:flex; }
+  .go-btn:hover{ background:var(--teal-deep); }
+  .go-btn:active{ transform:scale(0.99); }
+  .go-btn:disabled{ opacity:0.6; cursor:default; }
+
+  .spin{
+    width:15px; height:15px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.35);
+    border-top-color:#fff;
+    animation:spin 0.7s linear infinite;
+    display:none;
+  }
+  .spin.show{ display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- Result label ---------- */
+  .result{
+    display:none;
+    margin-top:56px;
+    animation:rise .45s ease both;
+  }
+  .result.show{ display:block; }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .label-card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(22,36,31,0.04);
+  }
+  .perforation{
+    height:14px;
+    background-image:radial-gradient(circle at 10px 7px, var(--bg) 5px, transparent 5.5px);
+    background-size:20px 14px;
+    background-repeat:repeat-x;
+    background-color:var(--ink);
+  }
+  .label-top{
+    background:var(--ink);
+    color:var(--white);
+    padding:20px 26px 24px;
+  }
+  .label-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#9FC6B8;
+    margin-bottom:8px;
+  }
+  .label-name{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+
+  .label-body{
+    padding:24px 26px 26px;
+  }
+  .conf-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .conf-label{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .conf-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:500;
+  }
+  .gauge{
+    width:100%;
+    height:10px;
+    background:var(--panel);
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .gauge-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--teal), var(--amber));
+    border-radius:6px;
+    transition:width .8s cubic-bezier(.2,.8,.2,1);
+  }
+  .conf-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:10px;
+  }
+
+  .info-block{
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px dashed var(--line);
+  }
+  .info-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:8px;
+    font-size:13px;
+  }
+  .info-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    flex-shrink:0;
+  }
+  .info-val{
+    font-weight:600;
+    text-align:right;
+  }
+  .info-used{
+    margin-top:12px;
+  }
+  .info-used p{
+    margin-top:6px;
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .info-disclaimer{
+    margin-top:14px;
+    font-size:11px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+
+  .error-box{
+    display:none;
+    margin-top:56px;
+    background:#FDF1EF;
+    border:1px solid #F0C9BE;
+    color:#8A3B26;
+    border-radius:12px;
+    padding:16px 18px;
+    font-size:13.5px;
+  }
+  .error-box.show{ display:block; }
+
+  /* ---------- Legend ---------- */
+  .legend{
+    margin-top:80px;
+    padding-top:32px;
+    border-top:1px solid var(--line);
+  }
+  .legend-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .legend-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:14px 10px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+
+  @media (max-width:720px){
+    .hero{ grid-template-columns:1fr; }
+    .capsule-art{ order:-1; max-width:140px; margin:0 auto; }
+    h1{ font-size:32px; }
+    .legend-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+
+  :focus-visible{
+    outline:2px solid var(--teal);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="rx-bar">
+    <div class="rx-mark"><span class="cross"></span> Tambal</div>
+    <div class="rx-tag">Visual ID · 10 OTC brands</div>
+  </div>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Photo in, medicine out</div>
+      <h1>Snap the pack.<br>We'll read the <em>label</em>.</h1>
+      <p>Upload a photo of any tablet, sachet, or bottle and this identifies which of ten common over‑the‑counter medicines it is, with a confidence reading.</p>
+    </div>
+    <div class="capsule-art">
+      <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="100" cy="170" rx="60" ry="10" fill="#16241F" opacity="0.06"/>
+        <g transform="rotate(-18 100 100)">
+          <rect x="55" y="40" width="90" height="120" rx="45" fill="#EEF4F0" stroke="#0E7C63" stroke-width="2"/>
+          <path d="M55 100 h90" stroke="#0E7C63" stroke-width="2"/>
+          <rect x="57" y="42" width="86" height="56" rx="43" fill="#0E7C63"/>
+          <rect x="70" y="115" width="60" height="6" rx="3" fill="#C7DBD1"/>
+          <rect x="70" y="130" width="42" height="6" rx="3" fill="#C7DBD1"/>
+        </g>
+        <circle cx="150" cy="55" r="5" fill="#E2A33B"/>
+        <circle cx="40" cy="140" r="4" fill="#E2A33B"/>
+      </svg>
+    </div>
+  </div>
+
+  <form id="predict-form">
+    <label class="tray" id="tray" for="file-input">
+      <div class="tray-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0E7C63" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 16V4M12 4l-5 5M12 4l5 5"/>
+          <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </div>
+      <h3>Drop a photo here</h3>
+      <p>or click to browse · JPG, PNG · one item per photo</p>
+      <input type="file" id="file-input" accept="image/*">
+
+      <div class="preview-wrap" id="preview-wrap">
+        <div class="preview-frame">
+          <img id="preview-img" alt="Selected medicine photo">
+          <div class="preview-info">
+            <div class="preview-name" id="preview-name">—</div>
+            <div class="preview-sub" id="preview-sub">ready to identify</div>
+          </div>
+          <button type="button" class="clear-btn" id="clear-btn" aria-label="Remove photo">×</button>
+        </div>
+      </div>
+    </label>
+
+    <button type="submit" class="go-btn" id="go-btn">
+      <span class="spin" id="spin"></span>
+      <span id="go-label">Identify medicine</span>
+    </button>
+  </form>
+
+  <div class="result" id="result">
+    <div class="label-card">
+      <div class="label-top">
+        <div class="label-eyebrow">Best match</div>
+        <div class="label-name" id="result-name">—</div>
+      </div>
+      <div class="perforation"></div>
+      <div class="label-body">
+        <div class="conf-row">
+          <span class="conf-label">Confidence</span>
+          <span class="conf-value" id="result-conf">0%</span>
+        </div>
+        <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
+        <p class="conf-note" id="conf-note">—</p>
+
+        <div class="info-block" id="info-block">
+          <div class="info-row">
+            <span class="info-tag">Generic name</span>
+            <span class="info-val" id="info-generic">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-tag">Category</span>
+            <span class="info-val" id="info-category">—</span>
+          </div>
+          <div class="info-used">
+            <span class="info-tag">Commonly used for</span>
+            <p id="info-used-for">—</p>
+          </div>
+          <p class="info-disclaimer">General information only — not medical advice. Always check the product label or ask a pharmacist/doctor before use.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div class="legend">
+    <div class="legend-title">Covered in this scan</div>
+    <div class="legend-grid" id="legend-grid"></div>
+  </div>
+
+</div>
+
+<script>
+  const MEDICINES = {
+    "Alaxan":    "#D64545",
+    "Bactidol":  "#2E86AB",
+    "Bioflu":    "#E8B44A",
+    "Biogesic":  "#2F6FB0",
+    "DayZinc":   "#E2793B",
+    "Decolgen":  "#D9A02A",
+    "Fish Oil":  "#C98A2B",
+    "Kremil S":  "#7A5C9E",
+    "Medicol":   "#C0392B",
+    "Neozep":    "#3F8F5C"
+  };
+
+  const legendGrid = document.getElementById('legend-grid');
+  Object.entries(MEDICINES).forEach(([name, color]) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span class="dot" style="background:${color}"></span>${name}`;
+    legendGrid.appendChild(item);
+  });
+
+  const tray = document.getElementById('tray');
+  const fileInput = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg = document.getElementById('preview-img');
+  const previewName = document.getElementById('preview-name');
+  const previewSub = document.getElementById('preview-sub');
+  const clearBtn = document.getElementById('clear-btn');
+  const goBtn = document.getElementById('go-btn');
+  const spin = document.getElementById('spin');
+  const goLabel = document.getElementById('go-label');
+  const result = document.getElementById('result');
+  const resultName = document.getElementById('result-name');
+  const resultConf = document.getElementById('result-conf');
+  const gaugeFill = document.getElementById('gauge-fill');
+  const confNote = document.getElementById('conf-note');
+  const infoGeneric = document.getElementById('info-generic');
+  const infoCategory = document.getElementById('info-category');
+  const infoUsedFor = document.getElementById('info-used-for');
+  const errorBox = document.getElementById('error-box');
+  const form = document.getElementById('predict-form');
+
+  let currentFile = null;
+
+  function setFile(file){
+    if(!file) return;
+    currentFile = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewName.textContent = file.name;
+    previewSub.textContent = `${(file.size/1024).toFixed(0)} KB · ready to identify`;
+    previewWrap.classList.add('show');
+    goBtn.classList.add('show');
+    result.classList.remove('show');
+    errorBox.classList.remove('show');
+  }
+
+  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+
+  ['dragenter','dragover'].forEach(evt =>
+    tray.addEventListener(evt, e => { e.preventDefault(); tray.classList.add('drag'); })
+  );
+  ['dragleave','drop'].forEach(evt =>
+    tray.addEventListener(evt, e => { e.preventDefault(); tray.classList.remove('drag'); })
+  );
+  tray.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if(file) setFile(file);
+  });
+
+  clearBtn.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    currentFile = null;
+    fileInput.value = '';
+    previewWrap.classList.remove('show');
+    goBtn.classList.remove('show');
+    result.classList.remove('show');
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if(!currentFile) return;
+
+    goBtn.disabled = true;
+    spin.classList.add('show');
+    goLabel.textContent = 'Reading label…';
+    errorBox.classList.remove('show');
+
+    const fd = new FormData();
+    fd.append('file', currentFile);
+
+    try{
+      const res = await fetch('/predict', { method:'POST', body:fd });
+      const data = await res.json();
+
+      if(!res.ok || data.error){
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
+      const color = MEDICINES[data.medicine] || '#0E7C63';
+      resultName.textContent = data.medicine;
+      resultName.style.color = color;
+      resultConf.textContent = `${data.confidence}%`;
+
+      let note = 'Strong match — packaging features are clear.';
+      if(data.confidence < 80 && data.confidence >= 50) note = 'Moderate match — try a clearer, closer photo for a firmer read.';
+      if(data.confidence < 50) note = 'Low confidence — retake the photo with better lighting and framing.';
+      confNote.textContent = note;
+
+      infoGeneric.textContent = data.generic_name || '—';
+      infoCategory.textContent = data.category || '—';
+      infoUsedFor.textContent = data.used_for || 'No usage info available for this item.';
+
+      result.classList.add('show');
+      requestAnimationFrame(() => { gaugeFill.style.width = `${data.confidence}%`; });
+
+    }catch(err){
+      errorBox.textContent = err.message;
+      errorBox.classList.add('show');
+      result.classList.remove('show');
+    }finally{
+      goBtn.disabled = false;
+      spin.classList.remove('show');
+      goLabel.textContent = 'Identify medicine';
+    }
+  });
+</script>
+
+</body>
+</html>
